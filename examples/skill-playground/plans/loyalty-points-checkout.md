@@ -13,16 +13,25 @@ Durable decisions that apply across all phases:
 - **Checkout boundary:** One computation produces subtotal, order discount, qualifying spend, points, and multiplier breakdown; **email and tests consume this structure** — no second copy of formulas in the template layer.
 - **Pure core:** Loyalty earning logic lives in a **pure** module or function; `computeCheckout` (or equivalent) orchestrates and returns a single result object.
 - **Persistence (later phases):** Ledger-style record per order with order id for **deduplication**; audit fields: order id, timestamp, points earned, rule version.
+- **Catalog / eligibility (multiplier phases):** SKU multiplier eligibility comes from product metadata (e.g. flag or campaign id on SKU) — exact storage TBD with catalog owners; surface via checkout line inputs as in PRD.
+
+## Testing alignment (per PRD)
+
+- Assert **observable outcomes** through the public checkout/loyalty API (qualifying spend, points, receipt-facing fields) — not private helpers or file layout alone.
+- **Pure** loyalty earning calculator tests plus integration-style tests from checkout input to full result where the pipeline is wired.
+- **Regression:** golden or table-driven cases for the three canonical examples plus at least one multi-line multiplier case (implemented across phases as features land).
 
 ---
 
 ## Phase 1: Base points on qualifying spend (no multipliers, no order coupon)
 
-**User stories:** 2, 9, 14, 15, 19, 20 (base path); 5 (non-negative with simple inputs); 13 (canonical example 1)
+**User stories:** 2, 9, 14, 15, 20; 5 (non-negative with simple inputs); 13 (canonical example 1); **1** (minimal — shopper sees points earned on this order via receipt/email, per PRD story 1)
 
 ### What to build
 
-End-to-end slice: extend checkout so a cart with **line discounts only** (no order coupon) yields **qualifying spend** (equals post–line-discount merchandise total in cents) and **points** = floor(qualifying spend in dollars). Expose these on the **same `CheckoutResult` (or loyalty sub-object)** used everywhere. Receipt email includes merchandise subtotal, qualifying spend, and points earned. Unit tests cover pure computation plus at least **canonical example 1** ($100 → 100 points at 1x).
+End-to-end slice: extend checkout so a cart with **line discounts only** (no order coupon) yields **qualifying spend** (equals post–line-discount merchandise total in cents, with tax and shipping excluded per PRD) and **points** = floor(qualifying spend in dollars). Expose these on the **same `CheckoutResult` (or loyalty sub-object)** used everywhere. Receipt email includes merchandise subtotal, qualifying spend, and points earned. Unit tests cover pure computation plus at least **canonical example 1** ($100 → 100 points at 1x).
+
+**Note:** PRD story **19** (points on **post–order-coupon** spend) requires an order coupon — covered in **Phase 2**, not here.
 
 ### Acceptance criteria
 
@@ -35,7 +44,7 @@ End-to-end slice: extend checkout so a cart with **line discounts only** (no ord
 
 ## Phase 2: Order-level coupon and qualifying spend
 
-**User stories:** 2, 9, 19; 13 (canonical example 2); 5
+**User stories:** **19** (primary — percent-/fixed-off order coupon, points on post-coupon merchandise spend); 2, 9; 13 (canonical example 2); 5
 
 ### What to build
 
@@ -67,7 +76,7 @@ Attach **multiplier eligibility** to lines (e.g. product metadata or flags on `L
 
 ## Phase 4: Receipt depth and customer/support clarity
 
-**User stories:** 1, 4, 6, 8; 7 (partial — glossary finalized in Phase 7)
+**User stories:** 1, 4, 6, 8 (full depth and copy vs Phase 1 minimal visibility); 7 (partial — glossary finalized in Phase 7)
 
 ### What to build
 
@@ -112,7 +121,7 @@ On order completion, record **ledger-style** earning: order identifier, timestam
 
 ## Phase 7: Support and finance alignment artifacts
 
-**User stories:** 7, 9 (documentation); 13 (canonical examples as shared QA references)
+**User stories:** 7 (support one-liner + glossary); **9** (documented floor rounding and liability language in glossary — earning behavior for 9 is implemented in Phases 1–2); **13** (canonical examples as shared QA references)
 
 ### What to build
 
@@ -125,6 +134,10 @@ Add **support one-liner** and **short glossary** (PRD-aligned) in repo docs or l
 
 ---
 
-## Out of scope (unchanged)
+## Out of scope (per PRD)
 
-Redemption, tiers, expiration beyond this PRD, full tax/shipping engines, CRM redesign, international currency rules — per PRD.
+- Redeeming points for discounts or cash (wallet, checkout redemption flows).
+- Tiered membership, expiration policies, and promotional bonus campaigns beyond SKU multipliers and documented order coupons.
+- Tax and shipping calculation engines (only exclusion from qualifying spend).
+- Full CRM or email marketing platform redesign (receipt may remain minimal HTML with required fields).
+- International currency and non-USD rounding rules unless explicitly added later.
