@@ -6,6 +6,55 @@
 
 ---
 
+## Review rubric (strict pre-Day-2 gate)
+
+Use this section to validate Day 1 completion quality before starting Day 2.
+
+### Required review outputs
+
+- [ ] Severity-ordered findings (`critical`, `high`, `medium`, `low`)
+- [ ] Missing characterization or boundary tests
+- [ ] Contract-scaffolding risks in introduced types
+- [ ] Checklist text edits (exact bullet replacements, not just advice)
+- [ ] Final Go / No-go for Day 2 start
+
+### Hard pass/fail criteria
+
+**No-go if any of these are true:**
+
+- [ ] Existing checkout behavior is not characterized at public boundaries.
+- [ ] Day 1 introduced runtime behavior changes instead of test + contract scaffolding.
+- [ ] Loyalty expectations are absent from tests (at least as pending/explicit placeholders).
+- [ ] New canonical contract types are missing or too vague to guide Day 2.
+- [ ] Test suite is not green on latest Day 1 commit.
+
+**Go only if all are true:**
+
+- [ ] `computeCheckout` characterization covers baseline totals, coupon behavior, receipt output, and invalid-input behavior.
+- [ ] `runCheckout` side-effect behavior is characterized at current boundary.
+- [ ] Loyalty characterization tests exist and are explicit about pending scope.
+- [ ] Canonical contract scaffolding exists (`PriceOrderInput`, `PricingSnapshot`, receipt/quote contracts).
+- [ ] Latest Day 1 state is test-green and lints clean for touched files.
+
+### Suggested review prompt
+
+```text
+Review Day 1 completion against this rubric.
+Use:
+- examples/skill-playground/docs/CHECKLIST-day-1-checkout-refactor.md
+- examples/skill-playground/tests/checkout.test.ts
+- examples/skill-playground/src/checkout/types.ts
+
+Return:
+1) Severity-ordered findings
+2) Missing tests/coverage
+3) Contract risks
+4) Exact checklist bullet edits
+5) Final Go/No-go for Day 2
+```
+
+---
+
 ## Preflight (15 minutes)
 
 - [ ] Pull latest branch and confirm clean working tree for targeted files.
