@@ -41,6 +41,8 @@ export type PricingLineSnapshot = {
   sku: string;
   quantity: number;
   lineSubtotalCents: MoneyCents;
+  lineQualifyingCents: MoneyCents;
+  receiptLabel: string;
 };
 
 export type PricingSnapshot = {

@@ -19,16 +19,37 @@ export function priceOrder(input: PriceOrderInput): PricingSnapshot {
   const orderDiscountCents = applyDiscount(merchandiseSubtotalCents, input.coupon);
   const totalMerchandiseCents = merchandiseSubtotalCents - orderDiscountCents;
 
-  const lineItems = input.cart.items.map((item) => ({
-    sku: item.sku,
-    quantity: item.quantity,
-    lineSubtotalCents: item.quantity * (item.unitPriceCents - (item.itemDiscountCents ?? 0)),
-  }));
-
   const qualifyingSpendCents = Math.max(0, totalMerchandiseCents);
+
+  const baseLineItems = input.cart.items.map((item) => {
+    const lineSubtotalCents = item.quantity * (item.unitPriceCents - (item.itemDiscountCents ?? 0));
+    const allocationRatio = merchandiseSubtotalCents > 0 ? lineSubtotalCents / merchandiseSubtotalCents : 0;
+    const lineQualifyingCents = Math.floor(qualifyingSpendCents * allocationRatio);
+    return {
+      sku: item.sku,
+      quantity: item.quantity,
+      lineSubtotalCents,
+      lineQualifyingCents,
+      receiptLabel: formatReceiptLine(item),
+    };
+  });
+
+  // Preserve total allocation by assigning rounding remainder to the last line.
+  const allocatedBeforeLast = baseLineItems
+    .slice(0, -1)
+    .reduce((sum, item) => sum + item.lineQualifyingCents, 0);
+  const lineItems =
+    baseLineItems.length === 0
+      ? []
+      : baseLineItems.map((item, index) =>
+          index === baseLineItems.length - 1
+            ? { ...item, lineQualifyingCents: Math.max(0, qualifyingSpendCents - allocatedBeforeLast) }
+            : item,
+        );
+
   const weightedPointsBaseCents = lineItems.reduce((sum, line, index) => {
     const multiplier = Math.max(1, input.cart.items[index]?.pointsMultiplier ?? 1);
-    return sum + line.lineSubtotalCents * multiplier;
+    return sum + line.lineQualifyingCents * multiplier;
   }, 0);
   const pointsEarned = Math.max(0, Math.floor(weightedPointsBaseCents / 100));
 
@@ -37,7 +58,9 @@ export function priceOrder(input: PriceOrderInput): PricingSnapshot {
     .map((item) => ({
       sku: item.sku,
       multiplier: item.pointsMultiplier ?? 1,
-      appliedToCents: item.quantity * (item.unitPriceCents - (item.itemDiscountCents ?? 0)),
+      appliedToCents:
+        lineItems.find((line) => line.sku === item.sku)?.lineQualifyingCents ??
+        item.quantity * (item.unitPriceCents - (item.itemDiscountCents ?? 0)),
     }));
 
   return {
@@ -52,7 +75,8 @@ export function priceOrder(input: PriceOrderInput): PricingSnapshot {
 }
 
 export function receiptFromPricing(pricing: PricingSnapshot, input: PriceOrderInput): ReceiptView {
-  const lineSummaries = input.cart.items.map((item) => ({ label: formatReceiptLine(item) }));
+  void input;
+  const lineSummaries = pricing.lineItems.map((item) => ({ label: item.receiptLabel }));
   const pointsLine = `Points earned: ${pricing.pointsEarned ?? 0}`;
   const qualifyingLine = `Qualifying spend: ${pricing.qualifyingSpendCents ?? pricing.totalMerchandiseCents}c`;
 

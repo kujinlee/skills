@@ -128,7 +128,7 @@ describe("loyalty characterization", () => {
       coupon: { kind: "PERCENT", percentOff: 10 },
     });
     expect(pricing.qualifyingSpendCents).toBe(8_100);
-    expect(pricing.pointsEarned).toBe(90);
+    expect(pricing.pointsEarned).toBe(81);
   });
 
   it("applies multiplier per eligible line", () => {
