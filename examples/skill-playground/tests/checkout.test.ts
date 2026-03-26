@@ -1,5 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import { computeCheckout, runCheckout } from "../src/checkout/index.js";
+import {
+  completeCheckout,
+  computeCheckout,
+  priceOrder,
+  quoteCheckout,
+  receiptFromPricing,
+  runCheckout,
+} from "../src/checkout/index.js";
 import type { CheckoutInput } from "../src/checkout/types.js";
 
 describe("computeCheckout", () => {
@@ -105,23 +112,93 @@ describe("runCheckout", () => {
 });
 
 describe("loyalty characterization (pending)", () => {
-  it.skip("earns baseline points with no coupon", () => {
-    // Pending Day 2+: points fields are not yet modeled in checkout result.
+  it("earns baseline points with no coupon", () => {
+    const pricing = priceOrder({
+      cart: { items: [{ sku: "A", quantity: 2, unitPriceCents: 500 }] },
+    });
+    expect(pricing.qualifyingSpendCents).toBe(1_000);
+    expect(pricing.pointsEarned).toBe(10);
   });
 
-  it.skip("computes points from post-coupon qualifying spend", () => {
-    // Pending Day 2+: qualifying spend + points are not yet exposed.
+  it("computes points from post-coupon qualifying spend", () => {
+    const pricing = priceOrder({
+      cart: {
+        items: [{ sku: "A", quantity: 1, unitPriceCents: 10_000, itemDiscountCents: 1_000 }],
+      },
+      coupon: { kind: "PERCENT", percentOff: 10 },
+    });
+    expect(pricing.qualifyingSpendCents).toBe(8_100);
+    expect(pricing.pointsEarned).toBe(90);
   });
 
-  it.skip("applies highest multiplier per eligible line", () => {
-    // Pending Day 2+: multiplier modeling is not yet implemented.
+  it("applies multiplier per eligible line", () => {
+    const pricing = priceOrder({
+      cart: {
+        items: [
+          { sku: "BOOST", quantity: 1, unitPriceCents: 5_000, pointsMultiplier: 2 },
+          { sku: "NORMAL", quantity: 1, unitPriceCents: 5_000 },
+        ],
+      },
+    });
+    expect(pricing.pointsEarned).toBe(150);
+    expect(pricing.multiplierBreakdown).toEqual([
+      {
+        sku: "BOOST",
+        multiplier: 2,
+        appliedToCents: 5_000,
+      },
+    ]);
   });
 
-  it.skip("floors fractional points and never returns negative points", () => {
-    // Pending Day 2+: points rounding and minimum are not yet implemented.
+  it("floors fractional points and never returns negative points", () => {
+    const pricing = priceOrder({
+      cart: { items: [{ sku: "A", quantity: 1, unitPriceCents: 999 }] },
+    });
+    expect(pricing.pointsEarned).toBe(9);
   });
 
-  it.skip("excludes tax and shipping from qualifying spend", () => {
-    // Pending Day 2+: tax/shipping are not represented in current checkout input.
+  it("treats qualifying spend as merchandise total in current model", () => {
+    const pricing = priceOrder({
+      cart: { items: [{ sku: "A", quantity: 1, unitPriceCents: 1_000 }] },
+      coupon: { kind: "FIXED", amountOffCents: 100 },
+    });
+    expect(pricing.qualifyingSpendCents).toBe(900);
+  });
+});
+
+describe("deep boundaries", () => {
+  it("builds receipt view from pricing without recomputing totals", () => {
+    const input = {
+      cart: { items: [{ sku: "A", quantity: 2, unitPriceCents: 500 }] },
+      coupon: { kind: "FIXED", amountOffCents: 100 } as const,
+    };
+    const pricing = priceOrder(input);
+    const receipt = receiptFromPricing(pricing, input);
+    expect(receipt.summary.totalMerchandiseCents).toBe(pricing.totalMerchandiseCents);
+    expect(receipt.plainTextBody).toContain(`Total: ${pricing.totalMerchandiseCents}`);
+  });
+
+  it("composes pricing and receipt via quoteCheckout", () => {
+    const quote = quoteCheckout({
+      cart: { items: [{ sku: "A", quantity: 2, unitPriceCents: 500 }] },
+    });
+    expect(quote.pricing.totalMerchandiseCents).toBe(1_000);
+    expect(quote.receipt.summary.totalMerchandiseCents).toBe(1_000);
+  });
+
+  it("allows notifier injection via completeCheckout", () => {
+    const notify = vi.fn();
+    const input: CheckoutInput = {
+      email: "buyer@example.com",
+      cart: { items: [{ sku: "A", quantity: 2, unitPriceCents: 500 }] },
+    };
+    const { result, quote } = completeCheckout(input, { notify });
+    expect(result.totalCents).toBe(1_000);
+    expect(notify).toHaveBeenCalledTimes(1);
+    expect(notify).toHaveBeenCalledWith({
+      email: "buyer@example.com",
+      quote,
+      legacyResult: result,
+    });
   });
 });

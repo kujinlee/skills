@@ -6,6 +6,8 @@ export type LineItem = {
   unitPriceCents: MoneyCents;
   /** Optional per-line markdown (e.g. clearance) */
   itemDiscountCents?: MoneyCents;
+  /** Optional loyalty multiplier for this line (e.g. 2 for double points). */
+  pointsMultiplier?: number;
 };
 
 export type Cart = {
@@ -72,3 +74,9 @@ export type CheckoutQuote = {
   pricing: PricingSnapshot;
   receipt: ReceiptView;
 };
+
+export type CheckoutNotifier = (args: {
+  email: string;
+  quote: CheckoutQuote;
+  legacyResult: CheckoutResult;
+}) => void;
