@@ -85,6 +85,22 @@ describe("computeCheckout", () => {
     };
     expect(() => computeCheckout(input)).toThrowError("Invalid cart");
   });
+
+  it("preserves legacy output shape when loyalty fields are present", () => {
+    const input: CheckoutInput = {
+      email: "buyer@example.com",
+      cart: {
+        items: [{ sku: "BOOST", quantity: 1, unitPriceCents: 1_000, pointsMultiplier: 3 }],
+      },
+    };
+    const result = computeCheckout(input);
+    expect(result).toEqual({
+      subtotalCents: 1_000,
+      discountCents: 0,
+      totalCents: 1_000,
+      receiptLines: ["BOOST x1 @ 1000c"],
+    });
+  });
 });
 
 describe("runCheckout", () => {
@@ -200,5 +216,15 @@ describe("deep boundaries", () => {
       quote,
       legacyResult: result,
     });
+  });
+
+  it("does not notify when validation fails", () => {
+    const notify = vi.fn();
+    const input: CheckoutInput = {
+      email: "invalid",
+      cart: { items: [{ sku: "A", quantity: 1, unitPriceCents: 500 }] },
+    };
+    expect(() => completeCheckout(input, { notify })).toThrowError("Invalid email");
+    expect(notify).not.toHaveBeenCalled();
   });
 });
