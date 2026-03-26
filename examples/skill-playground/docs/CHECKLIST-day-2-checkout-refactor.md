@@ -153,3 +153,14 @@ Return:
 - [ ] Notify port injection is live with default adapter and test coverage.
 - [ ] Existing compatibility APIs still function.
 - [ ] Latest commit is green and codebase is working.
+
+---
+
+## Day 2 status (current)
+
+- [x] `priceOrder` introduced and tested.
+- [x] `receiptFromPricing` introduced and tested.
+- [x] `quoteCheckout` introduced and tested.
+- [x] Notify port injection introduced via `completeCheckout(..., { notify })`, with default adapter.
+- [x] `computeCheckout` and `runCheckout` preserved as compatibility wrappers.
+- [x] Checkout tests passing after Day 2 refactor changes.

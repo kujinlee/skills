@@ -111,7 +111,7 @@ describe("runCheckout", () => {
   });
 });
 
-describe("loyalty characterization (pending)", () => {
+describe("loyalty characterization", () => {
   it("earns baseline points with no coupon", () => {
     const pricing = priceOrder({
       cart: { items: [{ sku: "A", quantity: 2, unitPriceCents: 500 }] },
