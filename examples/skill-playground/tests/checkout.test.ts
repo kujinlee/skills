@@ -125,6 +125,17 @@ describe("runCheckout", () => {
     expect(sendSpy).toHaveBeenCalledTimes(1);
     expect(sendSpy).toHaveBeenCalledWith("buyer@example.com", result);
   });
+
+  it("does not send checkout confirmation when input is invalid", async () => {
+    const emailModule = await import("../src/checkout/sendConfirmationEmail.js");
+    const sendSpy = vi.spyOn(emailModule, "sendCheckoutConfirmationEmail");
+    const input: CheckoutInput = {
+      email: "invalid",
+      cart: { items: [{ sku: "A", quantity: 2, unitPriceCents: 500 }] },
+    };
+    expect(() => runCheckout(input)).toThrowError("Invalid email");
+    expect(sendSpy).not.toHaveBeenCalled();
+  });
 });
 
 describe("loyalty characterization", () => {
@@ -166,6 +177,22 @@ describe("loyalty characterization", () => {
     ]);
   });
 
+  it("keeps multiplier breakdown per-line when duplicate skus exist", () => {
+    const pricing = priceOrder({
+      cart: {
+        items: [
+          { sku: "DUP", quantity: 1, unitPriceCents: 1_000, pointsMultiplier: 2 },
+          { sku: "DUP", quantity: 1, unitPriceCents: 2_000, pointsMultiplier: 3 },
+        ],
+      },
+    });
+    expect(pricing.multiplierBreakdown).toEqual([
+      { sku: "DUP", multiplier: 2, appliedToCents: 1_000 },
+      { sku: "DUP", multiplier: 3, appliedToCents: 2_000 },
+    ]);
+    expect(pricing.pointsEarned).toBe(80);
+  });
+
   it("floors fractional points and never returns negative points", () => {
     const pricing = priceOrder({
       cart: { items: [{ sku: "A", quantity: 1, unitPriceCents: 999 }] },
@@ -179,6 +206,24 @@ describe("loyalty characterization", () => {
       coupon: { kind: "FIXED", amountOffCents: 100 },
     });
     expect(pricing.qualifyingSpendCents).toBe(900);
+  });
+
+  it("preserves qualifying allocation sum with multi-line rounding", () => {
+    const pricing = priceOrder({
+      cart: {
+        items: [
+          { sku: "A", quantity: 1, unitPriceCents: 101 },
+          { sku: "B", quantity: 1, unitPriceCents: 101 },
+          { sku: "C", quantity: 1, unitPriceCents: 101 },
+        ],
+      },
+      coupon: { kind: "FIXED", amountOffCents: 1 },
+    });
+
+    expect(pricing.qualifyingSpendCents).toBe(302);
+    const allocatedSum = pricing.lineItems.reduce((sum, line) => sum + line.lineQualifyingCents, 0);
+    expect(allocatedSum).toBe(302);
+    expect(pricing.lineItems.map((line) => line.lineQualifyingCents)).toEqual([100, 100, 102]);
   });
 });
 

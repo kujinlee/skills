@@ -53,15 +53,19 @@ export function priceOrder(input: PriceOrderInput): PricingSnapshot {
   }, 0);
   const pointsEarned = Math.max(0, Math.floor(weightedPointsBaseCents / 100));
 
-  const multiplierBreakdown = input.cart.items
-    .filter((item) => (item.pointsMultiplier ?? 1) > 1)
-    .map((item) => ({
-      sku: item.sku,
-      multiplier: item.pointsMultiplier ?? 1,
-      appliedToCents:
-        lineItems.find((line) => line.sku === item.sku)?.lineQualifyingCents ??
-        item.quantity * (item.unitPriceCents - (item.itemDiscountCents ?? 0)),
-    }));
+  const multiplierBreakdown = lineItems.reduce<
+    NonNullable<PricingSnapshot["multiplierBreakdown"]>
+  >((acc, line, index) => {
+    const multiplier = Math.max(1, input.cart.items[index]?.pointsMultiplier ?? 1);
+    if (multiplier > 1) {
+      acc.push({
+        sku: line.sku,
+        multiplier,
+        appliedToCents: line.lineQualifyingCents,
+      });
+    }
+    return acc;
+  }, []);
 
   return {
     merchandiseSubtotalCents,
@@ -74,6 +78,12 @@ export function priceOrder(input: PriceOrderInput): PricingSnapshot {
   };
 }
 
+/**
+ * Builds a receipt view strictly from `pricing`.
+ *
+ * @deprecated The second argument is kept for temporary call-site compatibility only and is ignored.
+ * Plan: remove this parameter in a future API cleanup once callers are migrated.
+ */
 export function receiptFromPricing(pricing: PricingSnapshot, input: PriceOrderInput): ReceiptView {
   void input;
   const lineSummaries = pricing.lineItems.map((item) => ({ label: item.receiptLabel }));

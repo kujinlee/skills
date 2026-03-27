@@ -187,3 +187,92 @@ Only proceed if:
 - [ ] Architecture conformance is pass (or explicit accepted exceptions)
 - [ ] Test gaps are documented and scheduled
 - [ ] Final review decision is **Go**
+
+---
+
+## 5) Post-remediation review (recorded findings)
+
+**When:** After commits `92342b4` (align loyalty points + projection-only receipt labels) and `854cd78` (compatibility + notifier guard tests).  
+**Tests:** `examples/skill-playground` — `npm test` — 18 passed at time of review.
+
+### Findings
+
+- **Critical:** None. Validation runs before `quoteCheckout` / notify in `computeCheckout` and `completeCheckout`; pricing path is internally consistent.
+
+- **High:** `multiplierBreakdown` can mis-attribute `appliedToCents` when the **same `sku` appears on more than one line**, because resolution uses `lineItems.find((line) => line.sku === item.sku)` (first match only). Points use index-aligned `lineItems`, so **points** may still be correct while **breakdown** is wrong.
+
+- **Medium:** Multi-line qualifying allocation + rounding (remainder on last line) is not stress-tested (e.g. 3+ lines, awkward cent totals).
+
+- **Low:** `receiptFromPricing` ignores `input` (`void input`) — good for projection-only, but easy to misuse later. `runCheckout` with invalid input and **no email** is not explicitly covered by a spy test (symmetry with `completeCheckout` notifier guard).
+
+### Legacy Compatibility
+
+- **computeCheckout:** **Pass.** Validates, then maps `quoteCheckout` → legacy `CheckoutResult`; tests cover loyalty-only fields without changing legacy shape.
+
+- **runCheckout:** **Pass.** Delegates to `completeCheckout`; same numeric/receipt output as `computeCheckout` for valid input; default email path still exercised by existing spy test.
+
+### Architecture Conformance
+
+- **priceOrder boundary:** **Pass** — pure; `PricingSnapshot` is canonical for money + loyalty outputs used downstream.
+
+- **receiptFromPricing projection:** **Pass** — receipt labels and summary come from `pricing` (including `receiptLabel` on line snapshots); `input` is not used for totals.
+
+- **quoteCheckout composition:** **Pass** — `priceOrder` then `receiptFromPricing`.
+
+- **Notify injection:** **Pass** — `completeCheckout(..., { notify })`; test asserts notifier not called when validation fails.
+
+### Missing Tests
+
+- Duplicate SKU / multiple lines with same SKU: assert `multiplierBreakdown` matches each line’s `lineQualifyingCents` (or document SKU uniqueness as a constraint).
+
+- Rounding stress: multi-line cart where floor allocation would drift without last-line remainder; assert **sum of `lineQualifyingCents` === `qualifyingSpendCents`**.
+
+- `runCheckout` + invalid input: spy `sendCheckoutConfirmationEmail`, assert **not called** (mirror `completeCheckout` guard).
+
+### Decision
+
+- **Go** to continue, with a **tracked follow-up** on duplicate-SKU `multiplierBreakdown` (fix or explicitly scope as unsupported).
+
+### Top 3 next actions
+
+1. Fix `multiplierBreakdown` to key off **line index** (or stable line id), not `find` by `sku`; add duplicate-SKU regression test.
+
+2. Add one rounding-focused test (several lines, non-divisible qualifying spend) asserting allocation sums to `qualifyingSpendCents` and points match weighted formula.
+
+3. Add `runCheckout` invalid-input test: assert throw and **no** `sendCheckoutConfirmationEmail`.
+
+---
+
+## 6) Follow-up implementation re-review (recorded findings)
+
+**When:** After implementing the three follow-up actions from Section 5.  
+**Tests:** `examples/skill-playground` — `npm test` — 21 passed.
+
+### Findings
+
+- **Critical:** None.
+- **High:** None.
+- **Medium:** None.
+- **Low:** `receiptFromPricing` still accepts an `input` parameter that it does not use (`void input`). This is intentional for projection-only behavior; it is now explicitly documented as a temporary compatibility parameter and marked deprecated in code comments for later cleanup.
+
+### Follow-up action verification
+
+- **Duplicate SKU breakdown fix:** **Pass.** `multiplierBreakdown` now derives from index-aligned `lineItems`, so repeated `sku` values no longer collapse to first-match allocation.
+- **Rounding stress coverage:** **Pass.** Added a multi-line non-divisible allocation test that asserts `sum(lineQualifyingCents) === qualifyingSpendCents` and verifies expected remainder behavior.
+- **`runCheckout` invalid-input notify guard:** **Pass.** Added a spy-based test asserting throw + no email call.
+
+### Legacy Compatibility
+
+- **computeCheckout:** **Pass.** Legacy `CheckoutResult` shape and behavior remain intact.
+- **runCheckout:** **Pass.** Still delegates through `completeCheckout`; send path works for valid input and is blocked for invalid input.
+
+### Architecture Conformance
+
+- **priceOrder boundary:** **Pass** — pure and deterministic; loyalty math remains aligned to qualifying allocation.
+- **receiptFromPricing projection:** **Pass** — receipt lines continue to project from `PricingSnapshot`.
+- **quoteCheckout composition:** **Pass** — unchanged and correct.
+- **Notify injection:** **Pass** — validation occurs before notification side effects.
+
+### Decision
+
+- **Go.** Previous follow-up gaps are closed; no blocking findings remain.
