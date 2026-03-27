@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { fromPartial } from "@total-typescript/shoehorn";
 import {
   completeCheckout,
   computeCheckout,
@@ -22,8 +23,7 @@ describe("computeCheckout", () => {
   });
 
   it("applies PERCENT coupon to subtotal after item-level discounts", () => {
-    // `as CheckoutInput` is intentional — practice target for migrate-to-shoehorn
-    const input = {
+    const input = fromPartial<CheckoutInput>({
       email: "buyer@example.com",
       cart: {
         items: [
@@ -36,7 +36,7 @@ describe("computeCheckout", () => {
         ],
       },
       coupon: { kind: "PERCENT", percentOff: 10 },
-    } as CheckoutInput;
+    });
     const r = computeCheckout(input);
     expect(r.subtotalCents).toBe(9_000);
     // 10% of 9000 = 900; total should be 8100

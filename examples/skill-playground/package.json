@@ -10,5 +10,8 @@
   "devDependencies": {
     "typescript": "^5.7.2",
     "vitest": "^3.0.5"
+  },
+  "dependencies": {
+    "@total-typescript/shoehorn": "^0.1.2"
   }
 }
