@@ -41,7 +41,7 @@ Use this section to validate Day 1 completion quality before starting Day 2.
 ```text
 Review Day 1 completion against this rubric.
 Use:
-- examples/skill-playground/docs/CHECKLIST-day-1-checkout-refactor.md
+- examples/skill-playground/docs/checkout-refactor/CHECKLIST-day-1-checkout-refactor.md
 - examples/skill-playground/tests/checkout.test.ts
 - examples/skill-playground/src/checkout/types.ts
 

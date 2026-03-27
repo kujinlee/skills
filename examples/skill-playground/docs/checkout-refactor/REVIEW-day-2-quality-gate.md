@@ -50,9 +50,9 @@ npm test
 
 Reference docs:
 
-- `examples/skill-playground/docs/CHECKLIST-day-2-checkout-refactor.md`
-- `examples/skill-playground/docs/RFC-checkout-architecture-deepening.md`
-- `examples/skill-playground/docs/ISSUE-checkout-consolidation-refactor.md`
+- `examples/skill-playground/docs/checkout-refactor/CHECKLIST-day-2-checkout-refactor.md`
+- `examples/skill-playground/docs/checkout-refactor/RFC-checkout-architecture-deepening.md`
+- `examples/skill-playground/docs/checkout-refactor/ISSUE-checkout-consolidation-refactor.md`
 
 ### D. Risk assessment
 
@@ -73,9 +73,9 @@ Review Day 2 implementation quality and risks.
 Scope:
 - examples/skill-playground/src/checkout/
 - examples/skill-playground/tests/checkout.test.ts
-- examples/skill-playground/docs/CHECKLIST-day-2-checkout-refactor.md
-- examples/skill-playground/docs/RFC-checkout-architecture-deepening.md
-- examples/skill-playground/docs/ISSUE-checkout-consolidation-refactor.md
+- examples/skill-playground/docs/checkout-refactor/CHECKLIST-day-2-checkout-refactor.md
+- examples/skill-playground/docs/checkout-refactor/RFC-checkout-architecture-deepening.md
+- examples/skill-playground/docs/checkout-refactor/ISSUE-checkout-consolidation-refactor.md
 - commits: e39ac3b, c4f50a7, 29dedf2
 
 Return:
@@ -94,10 +94,10 @@ Review Day 2 implementation quality and risks.
 Scope:
 - examples/skill-playground/src/checkout/
 - examples/skill-playground/tests/checkout.test.ts
-- examples/skill-playground/docs/CHECKLIST-day-2-checkout-refactor.md
-- examples/skill-playground/docs/RFC-checkout-architecture-deepening.md
-- examples/skill-playground/docs/ISSUE-checkout-consolidation-refactor.md
-- examples/skill-playground/docs/REVIEW-day-2-quality-gate.md
+- examples/skill-playground/docs/checkout-refactor/CHECKLIST-day-2-checkout-refactor.md
+- examples/skill-playground/docs/checkout-refactor/RFC-checkout-architecture-deepening.md
+- examples/skill-playground/docs/checkout-refactor/ISSUE-checkout-consolidation-refactor.md
+- examples/skill-playground/docs/checkout-refactor/REVIEW-day-2-quality-gate.md
 - commits: e39ac3b, c4f50a7, 29dedf2
 
 Return:

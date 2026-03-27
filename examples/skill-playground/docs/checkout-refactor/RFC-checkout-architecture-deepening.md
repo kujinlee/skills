@@ -2,7 +2,7 @@
 
 **Status:** Draft (exploration — no implementation committed)  
 **Scope:** `examples/skill-playground/src/checkout/`  
-**Related:** `docs/PRD-loyalty-program.md` (single checkout boundary, structured result for email/tests)
+**Related:** `examples/skill-playground/docs/PRD-loyalty-program.md` (single checkout boundary, structured result for email/tests)
 **Tracking issue:** [Refactor checkout into deep module boundaries](https://github.com/kujinlee/skills/issues/2)
 
 ---
