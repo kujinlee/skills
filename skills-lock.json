@@ -6,6 +6,11 @@
       "sourceType": "github",
       "computedHash": "885b05367fb1cf61a1e27e0d50f14d2502a05c1fa276c6e9ea050ce6a90e7095"
     },
+    "git-guardrails-claude-code": {
+      "source": "kujinlee/skills",
+      "sourceType": "github",
+      "computedHash": "fa64806489347c4123a4ce20a8278c13f1e5297c79e6bfae0cbd8c0d9d9620e6"
+    },
     "grill-me": {
       "source": "mattpocock/skills",
       "sourceType": "github",
