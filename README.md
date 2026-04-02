@@ -2,6 +2,18 @@
 
 A collection of agent skills that extend capabilities across planning, development, and tooling.
 
+## Installing skills
+
+Use the **`skills` CLI** with Node.js (`npx`). Each skill below includes its install command; the pattern is:
+
+```bash
+npx skills@latest add mattpocock/skills/<skill-name>
+```
+
+Replace `<skill-name>` with the skill slug (e.g. `write-a-prd`). Installs are picked up by Claude Code / your agent setup (often under `~/.claude/skills`—see the `skills` package docs).
+
+**Credits:** This collection is by **[Matt Pocock](https://github.com/mattpocock)** — source repo **[mattpocock/skills](https://github.com/mattpocock/skills)**. **[kujinlee/skills](https://github.com/kujinlee/skills)** is a fork with the same layout and commands; you can browse the same README on **[vscode.dev](https://vscode.dev/github/kujinlee/skills/blob/main/README.md)**.
+
 ## Planning & Design
 
 These skills help you think through problems before writing code.
