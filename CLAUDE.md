@@ -33,18 +33,20 @@ The `description` field is the only thing Claude sees when deciding which skill 
 - Add `scripts/` only for deterministic, repeatedly-generated operations.
 - The `description` drives auto-invocation: vague descriptions cause skills to be missed or misrouted.
 
-## Skill playground (`examples/skill-playground/`)
+## Skill playground (separate repo)
 
-A deliberately broken TypeScript/Vitest project for practicing skills hands-on.
+Hands-on practice (TypeScript/Vitest checkout tutorial, frozen snapshots, walkthrough) lives in **[kujinlee/agent-skills-playground](https://github.com/kujinlee/agent-skills-playground)** — not in this repository.
 
 ```bash
-cd examples/skill-playground
+git clone https://github.com/kujinlee/agent-skills-playground.git
+cd agent-skills-playground
 npm install
-npm test               # run all tests
-npx vitest run <file>  # run a single test file
+npm test
 ```
 
-The playground has intentional problems: a shallow checkout module split across many files, a coupon discount bug, unsafe `as` type casts in tests, and a vague product brief — each one a target for a different skill.
+Follow **`docs/TUTORIAL.md`** in that repo. The project is deliberately imperfect (shallow checkout module, coupon bug, unsafe `as` in tests, vague brief) so different skills have clear targets.
+
+To pull historical `examples/skill-playground` trees from git (e.g. for snapshot regeneration), use a clone of **[mattpocock/skills](https://github.com/mattpocock/skills)** and `git archive <commit> examples/skill-playground`.
 
 ## How skills are discovered
 
